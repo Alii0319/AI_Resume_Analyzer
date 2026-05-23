@@ -9,6 +9,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ['email', 'password']
 
+    def validate_password(self, value):
+        if len(value) < 8:
+            raise serializers.ValidationError("Password must be at least 8 characters long.")
+        if not any(char.isdigit() for char in value):
+            raise serializers.ValidationError("Password must contain at least one number.")
+        if not any(char.isalpha() for char in value):
+            raise serializers.ValidationError("Password must contain at least one letter.")
+        return value
+
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data['email'],

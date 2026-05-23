@@ -18,6 +18,43 @@ function Register() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
 
+  const isMinLength = password.length >= 8
+  const hasLetter = /[a-zA-Z]/.test(password)
+  const hasNumber = /[0-9]/.test(password)
+
+  // Calculate strength score
+  let strengthScore = 0
+  if (password.length > 0) {
+    if (isMinLength) strengthScore += 1
+    if (hasLetter) strengthScore += 1
+    if (hasNumber) strengthScore += 1
+  }
+
+  // Determine strength label and color class
+  let strengthLabel = ""
+  let strengthColor = ""
+  let barWidth = "0%"
+  let barColor = "bg-transparent"
+
+  if (password.length > 0) {
+    if (strengthScore <= 1) {
+      strengthLabel = "Weak"
+      strengthColor = "text-rose-400 font-semibold"
+      barWidth = "33%"
+      barColor = "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]"
+    } else if (strengthScore === 2) {
+      strengthLabel = "Medium"
+      strengthColor = "text-amber-400 font-semibold"
+      barWidth = "66%"
+      barColor = "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)]"
+    } else if (strengthScore === 3) {
+      strengthLabel = "Strong"
+      strengthColor = "text-emerald-400 font-bold animate-pulse"
+      barWidth = "100%"
+      barColor = "bg-gradient-to-r from-emerald-500 to-teal-500 shadow-[0_0_12px_rgba(16,185,129,0.7)] animate-pulse"
+    }
+  }
+
   const handleRegister = async (e) => {
     e.preventDefault()
     setError("")
@@ -27,8 +64,13 @@ function Register() {
       return
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long")
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long")
+      return
+    }
+
+    if (!hasLetter || !hasNumber) {
+      setError("Password must contain both letters and numbers")
       return
     }
 
@@ -52,7 +94,25 @@ function Register() {
 
     } catch (error) {
       console.log(error)
-      setError(error.response?.data?.error || "Registration failed. Please try again.")
+      let errMsg = "Registration failed. Please try again."
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errMsg = error.response.data
+        } else if (error.response.data.error) {
+          errMsg = error.response.data.error
+        } else if (error.response.data.password) {
+          errMsg = Array.isArray(error.response.data.password) 
+            ? error.response.data.password[0] 
+            : error.response.data.password
+        } else if (error.response.data.email) {
+          errMsg = Array.isArray(error.response.data.email) 
+            ? error.response.data.email[0] 
+            : error.response.data.email
+        } else {
+          errMsg = Object.values(error.response.data).flat().join(" ")
+        }
+      }
+      setError(errMsg)
     } finally {
       setIsLoading(false)
     }
@@ -156,6 +216,52 @@ function Register() {
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
+
+                {/* Password strength suggestion & checklist */}
+                {password.length > 0 && (
+                  <div className="mt-3 space-y-2.5 p-3.5 bg-slate-900/40 rounded-xl border border-white/10 transition-all duration-300 animate-fadeIn">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="text-gray-400 font-medium">Password Strength:</span>
+                      <span className={`${strengthColor} tracking-wide transition-colors duration-300`}>
+                        {strengthLabel}
+                      </span>
+                    </div>
+                    {/* Strength Bar */}
+                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full ${barColor} transition-all duration-500 ease-out`}
+                        style={{ width: barWidth }}
+                      ></div>
+                    </div>
+                    {/* Suggestions & Checklist */}
+                    <div className="space-y-1.5 pt-1.5 border-t border-white/5">
+                      <div className="flex items-center space-x-2 text-xs">
+                        <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] ${isMinLength ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-gray-500"}`}>
+                          {isMinLength ? "✓" : "•"}
+                        </span>
+                        <span className={isMinLength ? "text-emerald-300/90 font-medium" : "text-gray-400/80"}>
+                          At least 8 characters
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-xs">
+                        <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] ${hasLetter ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-gray-500"}`}>
+                          {hasLetter ? "✓" : "•"}
+                        </span>
+                        <span className={hasLetter ? "text-emerald-300/90 font-medium" : "text-gray-400/80"}>
+                          At least one letter (a-z, A-Z)
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 text-xs">
+                        <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] ${hasNumber ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-gray-500"}`}>
+                          {hasNumber ? "✓" : "•"}
+                        </span>
+                        <span className={hasNumber ? "text-emerald-300/90 font-medium" : "text-gray-400/80"}>
+                          At least one number (0-9)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
