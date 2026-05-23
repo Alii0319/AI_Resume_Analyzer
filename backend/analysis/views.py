@@ -1,4 +1,4 @@
-﻿import io
+import io
 
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
@@ -66,16 +66,16 @@ class RunAnalysisView(APIView):
             keywords=keywords
         )
 
-        result = analyze_resume(parsed_text, keywords)
-        ai_suggestions = generate_resume_suggestions(result['missing'], parsed_text)
+        result = analyze_resume(parsed_text, description)
+        ai_suggestions = generate_resume_suggestions(result['missing_keywords'], parsed_text)
 
         analysis = Analysis.objects.create(
             user=request.user,
             resume=resume,
             job=job,
             score=result['score'],
-            matched_keywords=result['matched'],
-            missing_keywords=result['missing'],
+            matched_keywords=result['matched_keywords'],
+            missing_keywords=result['missing_keywords'],
             ai_suggestions=ai_suggestions
         )
 

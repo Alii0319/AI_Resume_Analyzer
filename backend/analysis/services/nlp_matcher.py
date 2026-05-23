@@ -129,8 +129,7 @@ class NLPMatcher:
         vectorizer = TfidfVectorizer(
             max_features=1000,
             ngram_range=(1, 2),  # Include bigrams
-            min_df=1,
-            max_df=0.9
+            min_df=1
         )
 
         try:
@@ -144,11 +143,11 @@ class NLPMatcher:
             similarity_score = similarity_matrix[0][1]
 
             # Convert to percentage
-            return round(similarity_score * 100, 2)
+            return int(round(similarity_score * 100))
 
         except ValueError:
             # Fallback if vectorization fails
-            return 0.0
+            return 0
 
     def analyze_resume(self, resume_text, job_description):
         """
